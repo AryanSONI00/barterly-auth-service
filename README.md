@@ -44,20 +44,85 @@ The Barterly Authentication Service is a robust, enterprise-grade authentication
 ### High-Level Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Client App    │    │   Load Balancer │    │   Auth Service  │
-│                 │◄──►│                 │◄──►│                 │
-│ - Web Browser   │    │ - SSL/TLS       │    │ - Express.js    │
-│ - Mobile App    │    │ - Rate Limiting │    │ - JWT Validation│
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                                                       │
+┌─────────────────┐        ┌─────────────────┐
+│   Client App    │        | Auth Service    │
+│                 │◄─────► |                 │
+│ - Web Browser   │        │ - Express.js    │
+│ - Mobile App    │        │ - JWT Validation│
+└─────────────────┘        └─────────────────┘
+                                          │_______
+                                                  |
                                                ┌─────────────────┐
                                                │   PostgreSQL    │
                                                │   Database      │
                                                │ - Encrypted     │
                                                │ - Parameterized │
                                                └─────────────────┘
+
 ```
+
+### Authentication & Authorization Workflow
+
+The following diagram illustrates the end-to-end flow of the Barterly Authentication Service, including registration, login, token refresh, logout, and protected API access.
+
+User Registration
+↓
+Input Validation (Joi Schemas)
+↓
+Password Hashing (bcrypt + pepper + SALT)
+↓
+User Created in DB (is_verified = false)
+↓
+OTP Generation & Email Sent
+↓
+User Verifies Email (is_verified = true)
+↓
+
+---
+
+Login Flow
+↓
+Credential Verification (bcrypt.compare)
+↓
+Check if Verified
+↓
+JWT (Access Token - 1h) Created
+↓
+Refresh Token Generated (crypto.randomBytes)
+↓
+Refresh Token Stored in DB & HTTP-only Secure Cookie
+↓
+
+---
+
+Token Refresh
+↓
+Validate Refresh Token (DB lookup + expiry)
+↓
+Generate New Access Token (JWT)
+↓
+Rotate Refresh Token (new token issued, old invalidated)
+↓
+
+---
+
+Logout
+↓
+Revoke/Delete Refresh Token in DB
+↓
+Clear Secure Cookie
+↓
+
+---
+
+Protected API Access
+↓
+Send Request with Bearer Access Token
+↓
+JWT Validation (signature + expiry)
+↓
+If valid → Allow access
+If invalid/expired → Reject (401 Unauthorized)
 
 ### Security Layers
 
