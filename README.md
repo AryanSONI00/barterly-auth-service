@@ -683,11 +683,11 @@ Security is an ongoing process that requires continuous monitoring, assessment, 
 
 ### Contact Information
 
-For security-related questions or incident reporting, please contact the security team at security@barterly.com.
+For security-related questions or incident reporting, please contact the security team at aryan000project@gmail.com.
 
 ---
 
 **Document Version**: 1.0
-**Last Updated**: December 2024
+**Last Updated**: September 2025
 **Classification**: Confidential
 **Review Cycle**: Quarterly
