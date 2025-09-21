@@ -1,16 +1,46 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import passport from './config/passport.js';
-import authRoutes from './routes/authRoutes.js';
-
-dotenv.config();
+if (process.env.NODE_ENV !== "production") {
+	require("dotenv").config(); // load environment variables from .env file in development mode
+}
+import express from "express";
 const app = express();
+import passport from "./config/passport.js";
+import authRouter from "./routes/authRoutes.js";
+import errorHandler from "./middlewares/errorHandler.js";
+import ExpressError from "./utils/ExpressError.js";
+import pool from "./config/db.js";
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
-app.use('/auth', authRoutes);
+// routes
+app.get("/api/v1/auth/health", (req, res) => {
+	res.json({ status: "ok" });
+});
+app.use("/api/v1/auth", authRouter);
 
+// if no above route matches, this middleware will be called
+app.all("*", (req, res, next) => {
+	next(new ExpressError(404, "Page Not Found"));
+});
+
+app.use(errorHandler); // Custom error handling middleware that will handle all errors
+
+// start server only after connecting to DB
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Auth service running on port ${PORT}`));
+async function startServer() {
+	try {
+		// Check DB connectivity before boot
+		await pool.query("SELECT 1");
+		console.log("✅ Connected to PostgreSQL");
+
+		// Only now start server
+		app.listen(PORT, () => {
+			console.log(`Auth service running on port ${PORT}`);
+		});
+	} catch (err) {
+		console.error("❌ Database not reachable:", err);
+		process.exit(1); // stop process
+	}
+}
+startServer();

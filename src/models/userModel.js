@@ -31,3 +31,7 @@ export async function verifyUser(userId) {
 export async function updatePassword(userId, newPasswordHash) {
   await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [newPasswordHash, userId]);
 }
+
+export async function deleteUser(userId) {
+  await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+}

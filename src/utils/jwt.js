@@ -1,9 +1,14 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
+import ExpressError from "./ExpressError.js";
 
 export function generateToken(payload) {
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+	return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
 }
 
 export function verifyToken(token) {
-  return jwt.verify(token, process.env.JWT_SECRET);
+	try {
+		return jwt.verify(token, process.env.JWT_SECRET);
+	} catch (err) {
+		throw new ExpressError("Invalid or expired token", 401);
+	}
 }

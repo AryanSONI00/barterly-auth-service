@@ -1,21 +1,28 @@
 import express from 'express';
-import passport from 'passport';
-import { signup, verifyEmail, loginSuccess, forgotPassword, resetPassword } from '../controllers/authController.js';
-
 const router = express.Router();
+import passport from 'passport';
+import wrapAsync from '../utils/wrapAsync.js';
+import { validateUserSignup, validateVerifyEmail, validateUserLogin, validateForgetPassword, validateResetPassword, validateChangePassword, validateRefreshToken, validateLogout } from '../middlewares/validationMiddleware.js';
+import { authenticateToken } from '../middlewares/authMiddleware.js';
+import { signup, verifyEmail, loginSuccess, forgotPassword, resetPassword, changePassword, refreshToken, logout, deleteAccount } from '../controllers/authController.js';
 
-router.post('/signup', signup);
-router.post('/verify-email', verifyEmail);
+router.post('/signup', validateUserSignup, wrapAsync(signup));
+router.post('/verify-email', validateVerifyEmail, wrapAsync(verifyEmail));
 
-router.post('/login', passport.authenticate('local', { session: false }), loginSuccess);
+router.post('/login', validateUserLogin, passport.authenticate('local', { session: false }), wrapAsync(loginSuccess));
+router.post('/logout', validateLogout, wrapAsync(logout));
 
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
+router.post('/forgot-password', validateForgetPassword, wrapAsync(forgotPassword));
+router.post('/reset-password', validateResetPassword, wrapAsync(resetPassword));
+router.post('/change-password', authenticateToken, validateChangePassword, wrapAsync(changePassword));
 
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/google/callback',
-  passport.authenticate('google', { session: false }),
-  loginSuccess
-);
+router.get('/google/callback', passport.authenticate('google', { session: false }), wrapAsync(loginSuccess));
+
+router.post('/refresh-token', validateRefreshToken, wrapAsync(refreshToken));
+
+router.delete('/delete-account', authenticateToken, wrapAsync(deleteAccount));
+
+router.get('/me', authenticateToken, (req, res) => res.json({ userId: req.user.id, email: req.user.email }));
 
 export default router;

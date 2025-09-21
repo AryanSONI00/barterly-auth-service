@@ -1,0 +1,26 @@
+SQL Injection Prevention
+
+Our application uses parameterized queries provided by the pg (node-postgres) library to ensure protection against SQL injection.
+How It Works
+Instead of directly interpolating user input into SQL strings (which is unsafe), we use placeholders ($1, $2, etc.) in our queries and pass the actual values separately as parameters. The pg library automatically:
+Escapes special characters,
+Handles type conversions,
+Ensures that user input is treated strictly as data, not as executable SQL code.
+This prevents malicious input (e.g., "' OR 1=1 --") from altering the intended query logic.
+Best Practices We Follow
+Parameterized Queries Everywhere
+All database interactions use placeholders ($1, $2, ...) with separate parameter arrays.
+No String Concatenation
+We never directly concatenate user input into SQL strings.
+Least Privilege
+Database users have only the required permissions, reducing potential impact.
+Input Validation
+Additional validation (e.g., for emails, usernames) is applied at the application layer to further reduce risks.
+✅ By combining parameterized queries with input validation and principle of least privilege, our service ensures strong protection against SQL injection attacks.
+
+JWT
+cryptographyicaly generated 64 byte hex string for jwt secret making it very secure
+token 1h and refresh token 7d
+saving token in state variable and refresh token in cookie and DB
+
+password in db -> hashing(Blowfish cipher algo) + salting + pepper
