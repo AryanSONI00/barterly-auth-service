@@ -1,0 +1,8 @@
+delete not-verified users after 24hrs of saving data (cron job)
+DELETE FROM users
+WHERE is_verified = false
+AND created_at < NOW() - INTERVAL '24 hours';
+
+login with wrong info gives res in body
+
+refresh token deletion after creation of new one

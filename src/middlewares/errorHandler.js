@@ -1,4 +1,4 @@
-export function errorHandler(err, req, res, next) {
+export default function errorHandler(err, req, res, next) {
 	const statusCode = err.statusCode || 500;
 	const message = err.message || "Something went wrong";
 

@@ -2,7 +2,7 @@ import express from 'express';
 const router = express.Router();
 import passport from 'passport';
 import wrapAsync from '../utils/wrapAsync.js';
-import { validateUserSignup, validateVerifyEmail, validateUserLogin, validateForgetPassword, validateResetPassword, validateChangePassword, validateRefreshToken, validateLogout } from '../middlewares/validationMiddleware.js';
+import { validateUserSignup, validateVerifyEmail, validateUserLogin, validateForgetPassword, validateResetPassword, validateChangePassword, validateRefreshToken, validateLogout, validateDeleteAccount } from '../middlewares/validationMiddleware.js';
 import { authenticateToken } from '../middlewares/authMiddleware.js';
 import { signup, verifyEmail, loginSuccess, forgotPassword, resetPassword, changePassword, refreshToken, logout, deleteAccount } from '../controllers/authController.js';
 
@@ -21,7 +21,7 @@ router.get('/google/callback', passport.authenticate('google', { session: false 
 
 router.post('/refresh-token', validateRefreshToken, wrapAsync(refreshToken));
 
-router.delete('/delete-account', authenticateToken, wrapAsync(deleteAccount));
+router.delete('/delete-account', validateDeleteAccount, authenticateToken, wrapAsync(deleteAccount));
 
 router.get('/me', authenticateToken, (req, res) => res.json({ userId: req.user.id, email: req.user.email }));
 

@@ -90,6 +90,8 @@ export async function resetPassword(req, res) {
 export async function changePassword(req, res) {
 	const { oldPassword, newPassword } = req.body;
 
+    if(oldPassword === newPassword) return res.status(400).json({ message: "New password must be different from old password" });
+
 	// req.user comes from JWT (authMiddleware)
 	const user = await findUserByEmail(req.user.email);
 	if (!user) return res.status(404).json({ message: "User not found" });
@@ -132,6 +134,18 @@ export async function logout(req, res) {
 
 // Delete User
 export async function deleteAccount(req, res) {
+    const { password } = req.body;
+
+    // req.user comes from JWT (authMiddleware)
+	const user = await findUserByEmail(req.user.email);
+	if (!user) return res.status(404).json({ message: "User not found" });
+
+	// Compare password
+	const isMatch = await bcrypt.compare(password + pepper, user.password_hash);
+	if (!isMatch) {
+		return res.status(400).json({ message: "Password is incorrect" });
+	}
+
 	const userId = req.user.id; // from JWT
 	await deleteAllRefreshTokens(userId);
 	await deleteUser(userId);

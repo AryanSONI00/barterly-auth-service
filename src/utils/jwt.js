@@ -9,6 +9,6 @@ export function verifyToken(token) {
 	try {
 		return jwt.verify(token, process.env.JWT_SECRET);
 	} catch (err) {
-		throw new ExpressError("Invalid or expired token", 401);
+		throw new ExpressError(401, "Invalid or expired token");
 	}
 }

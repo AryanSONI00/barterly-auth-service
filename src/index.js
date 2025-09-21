@@ -1,6 +1,5 @@
-if (process.env.NODE_ENV !== "production") {
-	require("dotenv").config(); // load environment variables from .env file in development mode
-}
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 const app = express();
 import passport from "./config/passport.js";
@@ -20,7 +19,7 @@ app.get("/api/v1/auth/health", (req, res) => {
 app.use("/api/v1/auth", authRouter);
 
 // if no above route matches, this middleware will be called
-app.all("*", (req, res, next) => {
+app.all(/.*/, (req, res, next) => {
 	next(new ExpressError(404, "Page Not Found"));
 });
 

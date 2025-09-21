@@ -5,7 +5,7 @@ CREATE TABLE users (
     username VARCHAR(100) UNIQUE NOT NULL,
     password_hash TEXT,
     provider VARCHAR(50) NOT NULL DEFAULT 'local', -- 'local' or 'google'
-    google_id UUID UNIQUE,
+    google_id TEXT UNIQUE,
     is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
