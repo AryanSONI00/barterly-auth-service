@@ -1,11 +1,12 @@
 import { verifyToken } from "../utils/jwt.js";
+import ExpressError from "../utils/ExpressError.js";
 
 export function authenticateToken(req, res, next) {
 	const authHeader = req.headers["authorization"];
 	const token = authHeader && authHeader.split(" ")[1]; // Bearer <token>
 
 	if (!token) {
-		return next(new ExpressError("Authorization token missing", 401));
+		return next(new ExpressError(401, "Authorization token missing"));
 	}
 
 	try {
