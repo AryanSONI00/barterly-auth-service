@@ -24,3 +24,5 @@ token 1h and refresh token 7d
 saving token in state variable and refresh token in cookie and DB
 
 password in db -> hashing(Blowfish cipher algo) + salting + pepper
+
+XCC attack, js attack
