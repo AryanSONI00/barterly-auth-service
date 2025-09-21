@@ -63,66 +63,107 @@ The Barterly Authentication Service is a robust, enterprise-grade authentication
 
 ### Authentication & Authorization Workflow
 
-The following diagram illustrates the end-to-end flow of the Barterly Authentication Service, including registration, login, token refresh, logout, and protected API access.
+The following comprehensive flow diagram illustrates the end-to-end security architecture of the Barterly Authentication Service, showcasing the multi-layered security controls and token management system.
 
-User Registration
-↓
-Input Validation (Joi Schemas)
-↓
-Password Hashing (bcrypt + pepper + SALT)
-↓
-User Created in DB (is_verified = false)
-↓
-OTP Generation & Email Sent
-↓
-User Verifies Email (is_verified = true)
-↓
+```mermaid
+graph TB
+    %% User Registration Flow
+    subgraph " User Registration & Verification"
+        A[User Registration Request] --> B[Input Validation<br/>Joi Schema Validation]
+        B --> C[Password Hashing<br/>bcrypt + pepper + SALT]
+        C --> D[User Creation in DB<br/>is_verified = false]
+        D --> E[OTP Generation<br/>6-digit numeric code]
+        E --> F[Email Dispatch<br/>SMTP with secure headers]
+        F --> G[User Email Verification<br/>is_verified = true]
+    end
 
----
+    %% Login Flow
+    subgraph " Authentication & Token Generation"
+        H[Login Request] --> I[Credential Validation<br/>Joi Schema + bcrypt.compare]
+        I --> J{Account Verified?}
+        J -->|No| K[Return Error<br/>Account not verified]
+        J -->|Yes| L[JWT Access Token Generation<br/>1-hour expiration]
+        L --> M[Refresh Token Generation<br/>crypto.randomBytes 64]
+        M --> N[Token Storage<br/>DB + HTTP-only Secure Cookie]
+        N --> O[Authentication Success<br/>Return Access Token]
+    end
 
-Login Flow
-↓
-Credential Verification (bcrypt.compare)
-↓
-Check if Verified
-↓
-JWT (Access Token - 1h) Created
-↓
-Refresh Token Generated (crypto.randomBytes)
-↓
-Refresh Token Stored in DB & HTTP-only Secure Cookie
-↓
+    %% Token Refresh Flow
+    subgraph "Token Refresh & Rotation"
+        P[Token Refresh Request] --> Q[Refresh Token Validation<br/>DB lookup + expiry check]
+        Q --> R{Token Valid?}
+        R -->|No| S[Return 401 Unauthorized]
+        R -->|Yes| T[Generate New Access Token<br/>JWT with 1-hour expiry]
+        T --> U[Rotate Refresh Token<br/>New token + invalidate old]
+        U --> V[Update DB & Cookie<br/>Secure token storage]
+        V --> W[Return New Access Token]
+    end
 
----
+    %% Logout Flow
+    subgraph "Secure Logout"
+        X[Logout Request] --> Y[Revoke Refresh Token<br/>Delete from DB]
+        Y --> Z[Clear Secure Cookie<br/>HTTP-only cookie removal]
+        Z --> AA[Logout Success<br/>Session terminated]
+    end
 
-Token Refresh
-↓
-Validate Refresh Token (DB lookup + expiry)
-↓
-Generate New Access Token (JWT)
-↓
-Rotate Refresh Token (new token issued, old invalidated)
-↓
+    %% Protected API Access
+    subgraph "Protected API Access"
+        BB[API Request with Bearer Token] --> CC[JWT Validation<br/>Signature + expiry verification]
+        CC --> DD{Token Valid?}
+        DD -->|No| EE[Return 401 Unauthorized<br/>Access denied]
+        DD -->|Yes| FF[Extract User Context<br/>Decode JWT payload]
+        FF --> GG[Process API Request<br/>Authorized access granted]
+    end
 
----
+    %% Security Controls
+    subgraph "Security Controls"
+        HH[Rate Limiting<br/>5 requests/15min per IP]
+        II[Input Sanitization<br/>XSS prevention]
+        JJ[SQL Injection Prevention<br/>Parameterized queries]
+        KK[CSRF Protection<br/>SameSite cookies]
+        LL[HTTPS Enforcement<br/>TLS 1.2+ encryption]
+    end
 
-Logout
-↓
-Revoke/Delete Refresh Token in DB
-↓
-Clear Secure Cookie
-↓
+    %% Flow connections
+    G --> H
+    O --> P
+    W --> BB
+    O --> X
+    AA --> H
 
----
+    %% Security control connections
+    HH -.-> I
+    II -.-> B
+    JJ -.-> D
+    KK -.-> N
+    LL -.-> BB
 
-Protected API Access
-↓
-Send Request with Bearer Access Token
-↓
-JWT Validation (signature + expiry)
-↓
-If valid → Allow access
-If invalid/expired → Reject (401 Unauthorized)
+    %% Styling
+    classDef registration fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef authentication fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef refresh fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef logout fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef api fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef security fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+
+    class A,B,C,D,E,F,G registration
+    class H,I,J,K,L,M,N,O authentication
+    class P,Q,R,S,T,U,V,W refresh
+    class X,Y,Z,AA logout
+    class BB,CC,DD,EE,FF,GG api
+    class HH,II,JJ,KK,LL security
+```
+
+#### Security Flow Components
+
+| **Component**          | **Security Control**          | **Attack Prevention**              |
+| ---------------------- | ----------------------------- | ---------------------------------- |
+| **Input Validation**   | Joi Schema Validation         | SQL Injection, XSS, Data Tampering |
+| **Password Hashing**   | bcrypt + pepper + SALT        | Rainbow Table, Dictionary Attacks  |
+| **Token Management**   | JWT + Refresh Token Rotation  | Session Hijacking, Token Replay    |
+| **Cookie Security**    | HTTP-only + Secure + SameSite | XSS, CSRF, Session Fixation        |
+| **Database Security**  | Parameterized Queries         | SQL Injection, Data Exfiltration   |
+| **Transport Security** | HTTPS + TLS 1.2+              | Man-in-the-Middle, Eavesdropping   |
 
 ### Security Layers
 
