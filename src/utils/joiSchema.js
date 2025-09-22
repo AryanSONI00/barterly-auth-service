@@ -32,10 +32,6 @@ export const changePasswordSchema = Joi.object({
 	newPassword: Joi.string().pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/).min(8).max(100).required(),
 }).required();
 
-export const refreshTokenSchema = Joi.object({
-    refreshToken: Joi.string().required(),
-}).required();
-
 export const logoutSchema = Joi.object({
     refreshToken: Joi.string().required(),
 }).required();

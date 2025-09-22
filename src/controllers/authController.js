@@ -4,7 +4,7 @@ import { generateOtp, otpExpiry } from "../utils/otp.js";
 import { sendOtpMail } from "../utils/mailer.js";
 import { createUser, findUserByEmail, verifyUser, updatePassword, deleteUser } from "../models/userModel.js";
 import { createOtp, findValidOtp, deleteOtp } from "../models/otpModel.js";
-import { createRefreshToken, findRefreshToken, deleteRefreshToken, deleteAllRefreshTokens } from "../models/refreshTokenModel.js";
+import { createRefreshToken, findRefreshTokenByToken, deleteRefreshTokenByToken } from "../models/refreshTokenModel.js";
 import { generateRefreshToken, refreshTokenExpiry } from "../utils/refreshToken.js";
 const pepper = process.env.PEPPER;
 
@@ -90,8 +90,6 @@ export async function resetPassword(req, res) {
 export async function changePassword(req, res) {
 	const { oldPassword, newPassword } = req.body;
 
-    if(oldPassword === newPassword) return res.status(400).json({ message: "New password must be different from old password" });
-
 	// req.user comes from JWT (authMiddleware)
 	const user = await findUserByEmail(req.user.email);
 	if (!user) return res.status(404).json({ message: "User not found" });
@@ -101,6 +99,9 @@ export async function changePassword(req, res) {
 	if (!isMatch) {
 		return res.status(400).json({ message: "Old password is incorrect" });
 	}
+
+    // Check if new password is same as old
+    if(oldPassword === newPassword) return res.status(400).json({ message: "New password must be different from old password" });
 
 	// Hash new password
 	const hash = await bcrypt.hash(newPassword + pepper, 10);
@@ -114,21 +115,20 @@ export async function refreshToken(req, res) {
 	const refreshToken = req.cookies.refreshToken; // extract from cookie
 	if (!refreshToken) return res.status(400).json({ message: "Refresh token required" });
 
-	const userId = req.body.userId; // frontend must send userId OR embed in refresh token
-	const stored = await findRefreshToken(userId, refreshToken);
-	if (!stored) return res.status(403).json({ message: "Invalid or expired refresh token" });
+	const stored = await findRefreshTokenByToken(refreshToken);
+    if (!stored) return res.status(403).json({ message: 'Invalid or expired refresh token' });
 
-	const accessToken = generateToken({ id: userId, email: req.body.email }); // email optional, or re-query DB
+	const accessToken = generateToken({ id: stored.user_id, email: stored.email });
 	res.json({ accessToken });
 }
 
 // Logout
 export async function logout(req, res) {
-	const { refreshToken } = req.body;
-	const userId = req.body.userId;
-
-	await deleteRefreshToken(userId, refreshToken);
-
+	const refreshToken = req.cookies.refreshToken;
+	if (refreshToken) {
+		await deleteRefreshTokenByToken(refreshToken);
+		res.clearCookie("refreshToken");
+	}
 	res.json({ message: "Logged out successfully" });
 }
 
@@ -143,12 +143,11 @@ export async function deleteAccount(req, res) {
 	// Compare password
 	const isMatch = await bcrypt.compare(password + pepper, user.password_hash);
 	if (!isMatch) {
-		return res.status(400).json({ message: "Password is incorrect" });
+		return res.status(401).json({ message: "Password is incorrect" });
 	}
 
 	const userId = req.user.id; // from JWT
-	await deleteAllRefreshTokens(userId);
-	await deleteUser(userId);
+	await deleteUser(userId); //with cascade everything will be deleted
 	res.clearCookie("refreshToken", {
 		httpOnly: true,
 		secure: process.env.NODE_ENV === "production",

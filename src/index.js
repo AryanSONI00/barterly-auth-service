@@ -2,15 +2,21 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 const app = express();
+
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+
 import passport from "./config/passport.js";
 import authRouter from "./routes/authRoutes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import ExpressError from "./utils/ExpressError.js";
 import pool from "./config/db.js";
+import "./utils/cleanup.js";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
+app.use(cookieParser());
 
 // routes
 app.get("/api/v1/auth/health", (req, res) => {

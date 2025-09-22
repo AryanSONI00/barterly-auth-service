@@ -1,5 +1,5 @@
 import ExpressError from "../utils/ExpressError.js"; // custom error class for Express
-import { signupSchema, verifySchema, loginSchema, forgetPasswordSchema, resetPasswordSchema, changePasswordSchema, refreshTokenSchema, logoutSchema, deleteSchema } from "../utils/joiSchema.js"; // importing the Joi schema for validation
+import { signupSchema, verifySchema, loginSchema, forgetPasswordSchema, resetPasswordSchema, changePasswordSchema, logoutSchema, deleteSchema } from "../utils/joiSchema.js"; // importing the Joi schema for validation
 
 export function validateUserSignup (req, res, next) {
 	let { error } = signupSchema.validate(req.body);
@@ -53,16 +53,6 @@ export function validateResetPassword (req, res, next) {
 
 export function validateChangePassword (req, res, next) {
     let { error } = changePasswordSchema.validate(req.body);
-    if (error) {
-        // If validation fails, throw an error
-        throw new ExpressError(400, error.message);
-    } else {
-        next();
-    }
-};
-
-export function validateRefreshToken (req, res, next) {
-    let { error } = refreshTokenSchema.validate(req.body);
     if (error) {
         // If validation fails, throw an error
         throw new ExpressError(400, error.message);

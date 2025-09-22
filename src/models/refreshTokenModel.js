@@ -30,3 +30,23 @@ export async function deleteAllRefreshTokens(userId) {
     [userId]
   );
 }
+
+// Find refresh token and join with users table to get email
+export async function findRefreshTokenByToken(token) {
+  const result = await pool.query(
+    `SELECT rt.user_id, u.email
+     FROM refresh_tokens rt
+     JOIN users u ON rt.user_id = u.id
+     WHERE rt.token = $1
+     AND rt.expires_at > NOW()`,
+    [token]
+  );
+  return result.rows[0]; // { user_id, email }
+}
+
+export async function deleteRefreshTokenByToken(token) {
+  await pool.query(
+    'DELETE FROM refresh_tokens WHERE token = $1',
+    [token]
+  );
+}
