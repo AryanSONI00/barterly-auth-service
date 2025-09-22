@@ -16,7 +16,7 @@ Least Privilege
 Database users have only the required permissions, reducing potential impact.
 Input Validation
 Additional validation (e.g., for emails, usernames) is applied at the application layer to further reduce risks.
-✅ By combining parameterized queries with input validation and principle of least privilege, our service ensures strong protection against SQL injection attacks.
+By combining parameterized queries with input validation and principle of least privilege, our service ensures strong protection against SQL injection attacks.
 
 JWT
 cryptographyicaly generated 64 byte hex string for jwt secret making it very secure
