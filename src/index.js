@@ -3,7 +3,6 @@ dotenv.config();
 import express from "express";
 const app = express();
 
-import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
 import passport from "./config/passport.js";
@@ -37,14 +36,14 @@ async function startServer() {
 	try {
 		// Check DB connectivity before boot
 		await pool.query("SELECT 1");
-		console.log("✅ Connected to PostgreSQL");
+		console.log("Connected to PostgreSQL");
 
 		// Only now start server
 		app.listen(PORT, () => {
 			console.log(`Auth service running on port ${PORT}`);
 		});
 	} catch (err) {
-		console.error("❌ Database not reachable:", err);
+		console.error("Database not reachable:", err);
 		process.exit(1); // stop process
 	}
 }
