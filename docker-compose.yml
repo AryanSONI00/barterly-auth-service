@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build: .
+    container_name: barterly-auth-service
+    restart: always
+    ports:
+      - "3001:3001" # host:container
+    env_file:
+      - .env
+    depends_on:
+      - auth-db
+
+  auth-db:
+    image: postgres:15-alpine
+    container_name: barterly-auth-db
+    restart: always
+    environment:
+      POSTGRES_USER: barterly
+      POSTGRES_PASSWORD: barterlypass
+      POSTGRES_DB: barterly_auth
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432" # host:container (5433 used to avoid conflict with other Postgres)
+
+volumes:
+  auth-db-data:
